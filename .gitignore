@@ -1,0 +1,14 @@
+# Ansible generated files
+*.retry
+
+# Secrets / private credentials
+.env
+*.pem
+*.key
+
+# Temporary editor files
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store

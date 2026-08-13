@@ -1,0 +1,147 @@
+# ============================================================
+# FEDORA WORKSTATION SETUP
+# ============================================================
+#
+# 1. Install Ansible:
+#    sudo dnf install ansible-core
+#
+# 2. Install collection:
+#    ansible-galaxy collection install community.general
+#
+# 3. Run:
+#    ansible-playbook workstation.yml --ask-become-pass
+#
+# ============================================================
+
+---
+
+- name: Configure Fedora Workstation
+  hosts: localhost
+  connection: local
+  become: true
+
+  vars:
+
+    # ========================================================
+    # DNF PACKAGES
+    # ========================================================
+
+    dnf_packages:
+      - gnome-terminal
+      - gnome-tweaks
+      - distrobox
+      - toolbox
+      - podman
+      - podman-docker
+      - podman-compose
+      - deja-dup
+      - restic
+      - fuse3
+      - libnotify
+      - gvfs-goa
+      - accountsservice
+      - tldr
+      - tree
+      - git
+      - openssh-clients
+      - shellcheck
+      - strace
+      - stress-ng
+      - iperf3
+      - awscli2
+      - k9s
+      - helm
+      - jq
+      - yq
+      - ripgrep
+      - shfmt
+      - mtr
+      - tmux
+      - lsof
+      - sysstat
+
+    # ========================================================
+    # FLATPAK APPLICATIONS
+    # ========================================================
+
+    flatpak_apps:
+      - app.zen_browser.zen
+      - com.github.flxzt.rnote
+      - com.github.tchx84.Flatseal
+      - com.mattjakeman.ExtensionManager
+      - com.spotify.Client
+      - io.podman_desktop.PodmanDesktop
+      - org.mozilla.thunderbird_esr
+      - org.onlyoffice.desktopeditors
+      - org.videolan.VLC
+
+  tasks:
+
+    # ========================================================
+    # SYSTEM
+    # ========================================================
+
+    - name: Update DNF metadata
+      ansible.builtin.dnf:
+        update_cache: true
+
+    # ========================================================
+    # DNF SOFTWARE
+    # ========================================================
+
+    - name: Install DNF packages
+      ansible.builtin.dnf:
+        name: "{{ dnf_packages }}"
+        state: present
+
+    # ========================================================
+    # PODMAN & DOCKER COMPATIBILITY
+    # ========================================================
+
+    - name: Enable Podman user socket for Docker compatibility
+      become: false
+      ansible.builtin.systemd:
+        name: podman.socket
+        scope: user
+        state: started
+        enabled: true
+
+    - name: Ensure DOCKER_HOST is set in bashrc for Docker compatibility
+      become: false
+      ansible.builtin.lineinfile:
+        path: "{{ lookup('env', 'HOME') }}/.bashrc"
+        line: 'export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"'
+        regexp: '^export DOCKER_HOST='
+        state: present
+
+    # ========================================================
+    # FLATHUB
+    # ========================================================
+
+    - name: Check Flathub
+      become: false
+      ansible.builtin.command:
+        cmd: flatpak remotes --user
+      register: flatpak_remotes
+      changed_when: false
+
+    - name: Add Flathub
+      become: false
+      ansible.builtin.command:
+        cmd: >
+          flatpak remote-add
+          --if-not-exists
+          flathub
+          https://dl.flathub.org/repo/flathub.flatpakrepo
+      when: "'flathub' not in flatpak_remotes.stdout"
+
+    # ========================================================
+    # FLATPAK SOFTWARE
+    # ========================================================
+
+    - name: Install Flatpak applications
+      become: false
+      community.general.flatpak:
+        name: "{{ flatpak_apps }}"
+        remote: flathub
+        state: present
