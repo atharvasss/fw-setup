@@ -87,6 +87,7 @@
       - awscli2
 
       # Kubernetes
+      - kubernetes-client
       - helm
       - kind
       - k9s
@@ -97,9 +98,6 @@
 
       # Automation
       - ansible-core
-
-    # Kubernetes client version
-    kubectl_version: "1.34"
 
     # Terraform repository
     terraform_repo_url: "https://rpm.releases.hashicorp.com/fedora/hashicorp.repo"
@@ -128,7 +126,7 @@
         update_cache: true
 
     # ========================================================
-    # HASHICORP REPOSITORY
+    # HASHICORP
     # ========================================================
 
     - name: Add HashiCorp repository
@@ -147,13 +145,14 @@
         state: present
 
     # ========================================================
-    # KUBECTL
+    # TERRAFORM
     # ========================================================
 
-    - name: Install kubectl
+    - name: Install Terraform
       ansible.builtin.dnf:
-        name: "kubernetes{{ kubectl_version }}-client"
+        name: terraform
         state: present
+        update_cache: true
 
     # ========================================================
     # PODMAN
@@ -197,7 +196,7 @@
       when: "'flathub' not in flatpak_remotes.stdout"
 
     # ========================================================
-    # FLATPAK APPLICATIONS
+    # FLATPAK
     # ========================================================
 
     - name: Install Flatpak applications
