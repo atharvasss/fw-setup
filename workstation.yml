@@ -1,21 +1,36 @@
 # ============================================================
-# FEDORA WORKSTATION SETUP
+# FEDORA DEVOPS / SRE WORKSTATION
 # ============================================================
 #
-# 1. Install Ansible:
-#    sudo dnf install ansible-core
+# Fedora host configuration for:
+# - Linux administration
+# - System troubleshooting
+# - Networking
+# - Git / SSH
+# - Containers
+# - Toolbox / Distrobox
+# - Desktop applications
 #
-# 2. Install collection:
-#    ansible-galaxy collection install community.general
+# Cloud / Kubernetes / IaC CLIs such as:
+# AWS CLI, Azure CLI, gcloud, Terraform, kubectl,
+# Helm, kind, k9s, etc. should be installed inside
+# Toolbox / Distrobox environments.
 #
-# 3. Run:
-#    ansible-playbook workstation.yml --ask-become-pass
+# Install:
+#   sudo dnf install ansible-core
+#   ansible-galaxy collection install community.general
+#
+# Run:
+#   ansible-playbook workstation.yml --ask-become-pass
+#
+# Check:
+#   ansible-playbook workstation.yml --ask-become-pass --check
 #
 # ============================================================
 
 ---
 
-- name: Configure Fedora Workstation
+- name: Configure Fedora DevOps SRE Workstation
   hosts: localhost
   connection: local
   become: true
@@ -27,44 +42,82 @@
     # ========================================================
 
     dnf_packages:
+
+      # ------------------------------------------------------
+      # Desktop
+      # ------------------------------------------------------
+
       - ptyxis
       - gnome-tweaks
       - distrobox
       - toolbox
+
+      # ------------------------------------------------------
+      # Containers
+      # ------------------------------------------------------
+
       - podman
       - podman-docker
       - podman-compose
+
+      # ------------------------------------------------------
+      # Backup / Filesystem
+      # ------------------------------------------------------
+
       - deja-dup
       - restic
       - fuse3
+
+      # ------------------------------------------------------
+      # System
+      # ------------------------------------------------------
+
       - libnotify
       - gvfs-goa
       - accountsservice
+
+      # ------------------------------------------------------
+      # General CLI
+      # ------------------------------------------------------
+
       - tldr
       - tree
-      - git
-      - openssh-clients
-      - shellcheck
-      - strace
-      - stress-ng
-      - iperf3
-      - awscli2
-      - k9s
-      - helm
+      - tmux
       - jq
       - yq
       - ripgrep
       - shfmt
-      - mtr
-      - tmux
+
+      # ------------------------------------------------------
+      # Git / SSH
+      # ------------------------------------------------------
+
+      - git
+      - openssh-clients
+
+      # ------------------------------------------------------
+      # Linux Troubleshooting
+      # ------------------------------------------------------
+
+      - shellcheck
+      - strace
+      - stress-ng
       - lsof
       - sysstat
+
+      # ------------------------------------------------------
+      # Networking
+      # ------------------------------------------------------
+
+      - iperf3
+      - mtr
 
     # ========================================================
     # FLATPAK APPLICATIONS
     # ========================================================
 
     flatpak_apps:
+
       - app.zen_browser.zen
       - com.github.flxzt.rnote
       - com.github.tchx84.Flatseal
@@ -86,19 +139,19 @@
         update_cache: true
 
     # ========================================================
-    # DNF SOFTWARE
+    # PACKAGES
     # ========================================================
 
-    - name: Install DNF packages
+    - name: Install Fedora host packages
       ansible.builtin.dnf:
         name: "{{ dnf_packages }}"
         state: present
 
     # ========================================================
-    # PODMAN & DOCKER COMPATIBILITY
+    # PODMAN
     # ========================================================
 
-    - name: Enable Podman user socket for Docker compatibility
+    - name: Enable Podman socket
       become: false
       ansible.builtin.systemd:
         name: podman.socket
@@ -106,7 +159,7 @@
         state: started
         enabled: true
 
-    - name: Ensure DOCKER_HOST is set in bashrc for Docker compatibility
+    - name: Configure Docker compatibility
       become: false
       ansible.builtin.lineinfile:
         path: "{{ lookup('env', 'HOME') }}/.bashrc"
@@ -136,7 +189,7 @@
       when: "'flathub' not in flatpak_remotes.stdout"
 
     # ========================================================
-    # FLATPAK SOFTWARE
+    # FLATPAK APPLICATIONS
     # ========================================================
 
     - name: Install Flatpak applications
