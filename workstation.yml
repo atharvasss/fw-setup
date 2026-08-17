@@ -2,19 +2,14 @@
 # FEDORA DEVOPS / SRE WORKSTATION
 # ============================================================
 #
-# Fedora host configuration for:
+# Fedora host for:
 # - Linux administration
-# - System troubleshooting
 # - Networking
 # - Git / SSH
 # - Containers
-# - Toolbox / Distrobox
-# - Desktop applications
-#
-# Cloud / Kubernetes / IaC CLIs such as:
-# AWS CLI, Azure CLI, gcloud, Terraform, kubectl,
-# Helm, kind, k9s, etc. should be installed inside
-# Toolbox / Distrobox environments.
+# - Cloud / IaC
+# - Kubernetes
+# - Toolbox
 #
 # Install:
 #   sudo dnf install ansible-core
@@ -43,43 +38,28 @@
 
     dnf_packages:
 
-      # ------------------------------------------------------
       # Desktop
-      # ------------------------------------------------------
-
       - ptyxis
       - gnome-tweaks
-      - distrobox
       - toolbox
 
-      # ------------------------------------------------------
       # Containers
-      # ------------------------------------------------------
-
       - podman
       - podman-docker
       - podman-compose
+      - skopeo
 
-      # ------------------------------------------------------
       # Backup / Filesystem
-      # ------------------------------------------------------
-
       - deja-dup
       - restic
       - fuse3
 
-      # ------------------------------------------------------
       # System
-      # ------------------------------------------------------
-
       - libnotify
       - gvfs-goa
       - accountsservice
 
-      # ------------------------------------------------------
       # General CLI
-      # ------------------------------------------------------
-
       - tldr
       - tree
       - tmux
@@ -88,34 +68,43 @@
       - ripgrep
       - shfmt
 
-      # ------------------------------------------------------
       # Git / SSH
-      # ------------------------------------------------------
-
       - git
       - openssh-clients
 
-      # ------------------------------------------------------
-      # Linux Troubleshooting
-      # ------------------------------------------------------
-
+      # Troubleshooting
       - shellcheck
       - strace
       - stress-ng
       - lsof
       - sysstat
 
-      # ------------------------------------------------------
       # Networking
-      # ------------------------------------------------------
-
       - iperf3
       - mtr
 
-    # ========================================================
-    # FLATPAK APPLICATIONS
-    # ========================================================
+      # Cloud
+      - awscli2
 
+      # Kubernetes
+      - helm
+      - kind
+      - k9s
+      - trivy
+
+      # IaC
+      - opentofu
+
+      # Automation
+      - ansible-core
+
+    # Kubernetes client version
+    kubectl_version: "1.34"
+
+    # Terraform repository
+    terraform_repo_url: "https://rpm.releases.hashicorp.com/fedora/hashicorp.repo"
+
+    # Flatpak applications
     flatpak_apps:
 
       - app.zen_browser.zen
@@ -139,12 +128,31 @@
         update_cache: true
 
     # ========================================================
+    # HASHICORP REPOSITORY
+    # ========================================================
+
+    - name: Add HashiCorp repository
+      ansible.builtin.get_url:
+        url: "{{ terraform_repo_url }}"
+        dest: /etc/yum.repos.d/hashicorp.repo
+        mode: '0644'
+
+    # ========================================================
     # PACKAGES
     # ========================================================
 
     - name: Install Fedora host packages
       ansible.builtin.dnf:
         name: "{{ dnf_packages }}"
+        state: present
+
+    # ========================================================
+    # KUBECTL
+    # ========================================================
+
+    - name: Install kubectl
+      ansible.builtin.dnf:
+        name: "kubernetes{{ kubectl_version }}-client"
         state: present
 
     # ========================================================
