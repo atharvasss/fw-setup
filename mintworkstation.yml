@@ -1,0 +1,251 @@
+```yaml
+# ============================================================
+# LINUX MINT WORKSTATION
+# ============================================================
+#
+# Linux Mint host for:
+# - Linux administration
+# - Networking
+# - Git / SSH
+# - Containers
+# - Cloud / IaC
+# - Kubernetes
+# - Ansible
+# - DevOps troubleshooting
+#
+# Install:
+#   sudo apt update
+#   sudo apt install ansible
+#   ansible-galaxy collection install community.general
+#
+# Run:
+#   ansible-playbook mintworkstation.yml --ask-become-pass
+#
+# Check:
+#   ansible-playbook mintworkstation.yml --ask-become-pass --check
+#
+# ============================================================
+#
+# MANUAL INSTALL — NOT HANDLED BY THIS PLAYBOOK
+# ============================================================
+#
+# Install these manually:
+#
+#   - OpenTofu
+#   - Kind
+#   - K9s
+#   - Trivy
+#   - Terraform
+#
+# ============================================================
+
+---
+
+- name: Configure Linux Mint Workstation
+  hosts: localhost
+  connection: local
+  become: true
+
+  vars:
+
+    # ========================================================
+    # APT PACKAGES
+    # ========================================================
+
+    apt_packages:
+
+      # ------------------------------------------------------
+      # Desktop
+      # ------------------------------------------------------
+
+      - ptyxis
+      - gnome-tweaks
+      - toolbox
+
+
+      # ------------------------------------------------------
+      # Containers
+      # ------------------------------------------------------
+
+      - podman
+      - podman-docker
+      - podman-compose
+      - skopeo
+      - buildah
+
+
+      # ------------------------------------------------------
+      # Backup / Filesystem
+      # ------------------------------------------------------
+
+      - deja-dup
+      - restic
+      - fuse3
+
+
+      # ------------------------------------------------------
+      # System
+      # ------------------------------------------------------
+
+      - libnotify-bin
+      - gvfs
+      - accountsservice
+
+
+      # ------------------------------------------------------
+      # General CLI
+      # ------------------------------------------------------
+
+      - tldr
+      - tree
+      - tmux
+      - jq
+      - yq
+      - ripgrep
+      - shfmt
+
+
+      # ------------------------------------------------------
+      # Git / SSH
+      # ------------------------------------------------------
+
+      - git
+      - openssh-client
+
+
+      # ------------------------------------------------------
+      # Troubleshooting
+      # ------------------------------------------------------
+
+      - shellcheck
+      - strace
+      - stress-ng
+      - lsof
+      - sysstat
+
+
+      # ------------------------------------------------------
+      # Networking
+      # ------------------------------------------------------
+
+      - iperf3
+      - mtr
+
+
+      # ------------------------------------------------------
+      # Cloud
+      # ------------------------------------------------------
+
+      - awscli
+
+
+      # ------------------------------------------------------
+      # Kubernetes
+      # ------------------------------------------------------
+
+      - kubectl
+      - helm
+
+
+      # ------------------------------------------------------
+      # Automation
+      # ------------------------------------------------------
+
+      - ansible
+
+
+    # ========================================================
+    # FLATPAK APPLICATIONS
+    # ========================================================
+
+    flatpak_apps:
+
+      - app.zen_browser.zen
+      - com.github.flxzt.rnote
+      - com.github.tchx84.Flatseal
+      - com.mattjakeman.ExtensionManager
+      - com.spotify.Client
+      - io.podman_desktop.PodmanDesktop
+      - org.mozilla.Thunderbird
+      - org.onlyoffice.desktopeditors
+      - org.videolan.VLC
+
+
+  tasks:
+
+    # ========================================================
+    # SYSTEM
+    # ========================================================
+
+    - name: Update APT metadata
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+
+    # ========================================================
+    # PACKAGES
+    # ========================================================
+
+    - name: Install Linux Mint host packages
+      ansible.builtin.apt:
+        name: "{{ apt_packages }}"
+        state: present
+
+
+    # ========================================================
+    # PODMAN
+    # ========================================================
+
+    - name: Enable Podman socket
+      become: false
+      ansible.builtin.systemd:
+        name: podman.socket
+        scope: user
+        state: started
+        enabled: true
+
+    - name: Configure Docker compatibility
+      become: false
+      ansible.builtin.lineinfile:
+        path: "{{ lookup('env', 'HOME') }}/.bashrc"
+        line: 'export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"'
+        regexp: '^export DOCKER_HOST='
+        state: present
+
+
+    # ========================================================
+    # FLATHUB
+    # ========================================================
+
+    - name: Check Flathub
+      become: false
+      ansible.builtin.command:
+        cmd: flatpak remotes --user
+      register: flatpak_remotes
+      changed_when: false
+
+    - name: Add Flathub
+      become: false
+      ansible.builtin.command:
+        cmd: >
+          flatpak remote-add
+          --if-not-exists
+          --user
+          flathub
+          https://dl.flathub.org/repo/flathub.flatpakrepo
+      when: "'flathub' not in flatpak_remotes.stdout"
+
+
+    # ========================================================
+    # FLATPAK
+    # ========================================================
+
+    - name: Install Flatpak applications
+      become: false
+      community.general.flatpak:
+        name: "{{ flatpak_apps }}"
+        remote: flathub
+        state: present
+        method: user
+```
