@@ -1,4 +1,3 @@
-```yaml
 # ============================================================
 # LINUX MINT WORKSTATION
 # ============================================================
@@ -18,10 +17,10 @@
 #   ansible-galaxy collection install community.general
 #
 # Check:
-#   ansible-playbook workstation.yml --ask-become-pass --check
+#   ansible-playbook mintworkstation.yml --ask-become-pass --check
 #
 # Run:
-#   ansible-playbook workstation.yml --ask-become-pass
+#   ansible-playbook mintworkstation.yml --ask-become-pass
 #
 # ============================================================
 # MANUAL INSTALL — NOT HANDLED BY THIS PLAYBOOK
@@ -247,6 +246,3 @@
         remote: flathub
         state: present
         method: user
-
-
-```
