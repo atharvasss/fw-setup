@@ -9,7 +9,7 @@
 # - Containers
 # - Cloud / IaC
 # - Kubernetes
-# - Toolbox
+#
 #
 # Install:
 #   sudo dnf install ansible-core
@@ -41,8 +41,7 @@
       # Desktop
       - ptyxis
       - gnome-tweaks
-      - toolbox
-
+      
       # Containers
       - podman
       - podman-docker
