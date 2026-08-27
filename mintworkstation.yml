@@ -1,52 +1,46 @@
-```yaml
 # ============================================================
-# LINUX MINT WORKSTATION
+# LINUX MINT DEVOPS / SRE WORKSTATION
 # ============================================================
 #
-# Linux Mint host for:
-# - Linux administration
-# - Networking
-# - Git / SSH
-# - Containers
-# - Cloud / IaC
-# - Kubernetes
-# - Ansible
-# - DevOps troubleshooting
+# Prerequisites:
 #
-# Install:
 #   sudo apt update
 #   sudo apt install ansible
 #   ansible-galaxy collection install community.general
 #
 # Run:
-#   ansible-playbook mintworkstation.yml --ask-become-pass
+#
+#   ansible-playbook workstation.yml --ask-become-pass
 #
 # Check:
-#   ansible-playbook mintworkstation.yml --ask-become-pass --check
 #
-# ============================================================
-#
-# MANUAL INSTALL — NOT HANDLED BY THIS PLAYBOOK
-# ============================================================
-#
-# Install these manually:
-#
-#   - OpenTofu
-#   - Kind
-#   - K9s
-#   - Trivy
-#   - Terraform
+#   ansible-playbook workstation.yml --check --ask-become-pass
 #
 # ============================================================
 
 ---
 
-- name: Configure Linux Mint Workstation
+- name: Configure Linux Mint DevOps Workstation
   hosts: localhost
   connection: local
   become: true
+  gather_facts: true
 
   vars:
+
+    # ========================================================
+    # USER
+    # ========================================================
+
+    workstation_user: >-
+      {{ lookup('env', 'SUDO_USER') |
+         default(lookup('env', 'USER'), true) }}
+
+    workstation_uid: >-
+      {{ lookup('pipe', 'id -u ' ~ workstation_user) }}
+
+    workstation_runtime_dir: "/run/user/{{ workstation_uid }}"
+
 
     # ========================================================
     # APT PACKAGES
@@ -90,6 +84,7 @@
       - libnotify-bin
       - gvfs
       - accountsservice
+      - flatpak
 
 
       # ------------------------------------------------------
@@ -103,6 +98,11 @@
       - yq
       - ripgrep
       - shfmt
+      - curl
+      - wget
+      - vim
+      - ncdu
+      - btop
 
 
       # ------------------------------------------------------
@@ -130,6 +130,9 @@
 
       - iperf3
       - mtr
+      - tcpdump
+      - dnsutils
+      - netcat-openbsd
 
 
       # ------------------------------------------------------
@@ -187,7 +190,7 @@
     # PACKAGES
     # ========================================================
 
-    - name: Install Linux Mint host packages
+    - name: Install workstation packages
       ansible.builtin.apt:
         name: "{{ apt_packages }}"
         state: present
@@ -197,20 +200,26 @@
     # PODMAN
     # ========================================================
 
-    - name: Enable Podman socket
+    - name: Enable rootless Podman socket
       become: false
       ansible.builtin.systemd:
         name: podman.socket
         scope: user
         state: started
         enabled: true
+      environment:
+        XDG_RUNTIME_DIR: "{{ workstation_runtime_dir }}"
+        DBUS_SESSION_BUS_ADDRESS: >-
+          unix:path={{ workstation_runtime_dir }}/bus
 
-    - name: Configure Docker compatibility
+    # Keep Docker-compatible clients pointed at rootless Podman.
+    # This does NOT expose Podman over TCP.
+    - name: Configure Docker API compatibility
       become: false
       ansible.builtin.lineinfile:
         path: "{{ lookup('env', 'HOME') }}/.bashrc"
-        line: 'export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"'
         regexp: '^export DOCKER_HOST='
+        line: 'export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"'
         state: present
 
 
@@ -218,23 +227,13 @@
     # FLATHUB
     # ========================================================
 
-    - name: Check Flathub
+    - name: Configure Flathub
       become: false
-      ansible.builtin.command:
-        cmd: flatpak remotes --user
-      register: flatpak_remotes
-      changed_when: false
-
-    - name: Add Flathub
-      become: false
-      ansible.builtin.command:
-        cmd: >
-          flatpak remote-add
-          --if-not-exists
-          --user
-          flathub
-          https://dl.flathub.org/repo/flathub.flatpakrepo
-      when: "'flathub' not in flatpak_remotes.stdout"
+      community.general.flatpak_remote:
+        name: flathub
+        state: present
+        flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+        method: user
 
 
     # ========================================================
@@ -248,4 +247,3 @@
         remote: flathub
         state: present
         method: user
-```
