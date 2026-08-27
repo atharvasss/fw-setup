@@ -1,22 +1,49 @@
 # ============================================================
-# LINUX MINT DEVOPS / SRE WORKSTATION
+# LINUX MINT WORKSTATION
 # ============================================================
 #
-# Prerequisites:
+# Fedora → Linux Mint conversion:
+#   dnf  → apt
 #
+# ============================================================
+# MANUAL INSTALL — NOT HANDLED BY THIS PLAYBOOK
+# ============================================================
+#
+# The following tools are intentionally NOT installed by
+# Ansible because they may not be available/reliable through
+# the default Linux Mint packages.
+#
+# Install these manually:
+#
+#   1. OpenTofu
+#   2. Kind
+#   3. K9s
+#   4. Trivy
+#   5. terraform
+#
+# ------------------------------------------------------------
+#
+# Everything else required by this playbook is handled by
+# APT or Flatpak.
+#
+# ============================================================
+#
+# Install Ansible:
 #   sudo apt update
-#   sudo apt install ansible
+#   sudo apt install -y ansible
+#
+# Install required Ansible collection:
 #   ansible-galaxy collection install community.general
 #
-# Run:
+# Check:
+#   ansible-playbook workstation.yml --ask-become-pass --check
 #
+# Run:
 #   ansible-playbook workstation.yml --ask-become-pass
 #
-# Check:
-#
-#   ansible-playbook workstation.yml --check --ask-become-pass
-#
 # ============================================================
+```
+
 
 ---
 
