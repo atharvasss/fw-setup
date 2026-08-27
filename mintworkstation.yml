@@ -71,7 +71,7 @@
       # ------------------------------------------------------
 
       - gnome-tweaks
-      - podman-toolbox
+      - toolbox
 
 
       # ------------------------------------------------------
@@ -212,15 +212,14 @@
         enabled: true
       environment:
         XDG_RUNTIME_DIR: "{{ workstation_runtime_dir }}"
-        DBUS_SESSION_BUS_ADDRESS: >-
-          unix:path={{ workstation_runtime_dir }}/bus
+        DBUS_SESSION_BUS_ADDRESS: "unix:path={{ workstation_runtime_dir }}/bus"
 
     - name: Configure Docker API compatibility
       become: false
       ansible.builtin.lineinfile:
         path: "{{ workstation_home }}/.bashrc"
         regexp: '^export DOCKER_HOST='
-        line: 'export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"'
+        line: 'export DOCKER_HOST="unix:///run/user/$(id -u)/podman/podman.sock"'
         state: present
 
 
@@ -248,4 +247,6 @@
         remote: flathub
         state: present
         method: user
+
+
 ```
