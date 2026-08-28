@@ -65,9 +65,6 @@
 
     apt_packages:
 
-      # Desktop
-      - gnome-tweaks
-
       # Containers
       - podman
       - podman-docker
@@ -133,7 +130,6 @@
       - com.github.tchx84.Flatseal
       - com.spotify.Client
       - io.podman_desktop.PodmanDesktop
-      - org.mozilla.Thunderbird
       - org.onlyoffice.desktopeditors
       - org.videolan.VLC
 
