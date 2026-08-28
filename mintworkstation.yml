@@ -53,9 +53,9 @@
     # USER
     # ========================================================
 
-    workstation_user: "{{ ansible_user_id }}"
-    workstation_home: "{{ ansible_env.HOME }}"
-    workstation_uid: "{{ ansible_user_uid }}"
+    workstation_user: "{{ lookup('env', 'USER') }}"
+    workstation_home: "{{ lookup('env', 'HOME') }}"
+    workstation_uid: "{{ lookup('pipe', 'id -u') }}"
     workstation_runtime_dir: "/run/user/{{ workstation_uid }}"
 
 
@@ -65,46 +65,28 @@
 
     apt_packages:
 
-      # ------------------------------------------------------
       # Desktop
-      # ------------------------------------------------------
-
       - gnome-tweaks
 
-      # ------------------------------------------------------
       # Containers
-      # ------------------------------------------------------
-
       - podman
       - podman-docker
       - podman-compose
       - skopeo
       - buildah
 
-
-      # ------------------------------------------------------
       # Backup / Filesystem
-      # ------------------------------------------------------
-
       - deja-dup
       - restic
       - fuse3
 
-
-      # ------------------------------------------------------
       # System
-      # ------------------------------------------------------
-
       - libnotify-bin
       - gvfs
       - accountsservice
       - flatpak
 
-
-      # ------------------------------------------------------
       # General CLI
-      # ------------------------------------------------------
-
       - tldr
       - tree
       - tmux
@@ -118,41 +100,25 @@
       - ncdu
       - btop
 
-
-      # ------------------------------------------------------
       # Git / SSH
-      # ------------------------------------------------------
-
       - git
       - openssh-client
 
-
-      # ------------------------------------------------------
       # Troubleshooting
-      # ------------------------------------------------------
-
       - shellcheck
       - strace
       - stress-ng
       - lsof
       - sysstat
 
-
-      # ------------------------------------------------------
       # Networking
-      # ------------------------------------------------------
-
       - iperf3
       - mtr
       - tcpdump
       - dnsutils
       - netcat-openbsd
 
-
-      # ------------------------------------------------------
       # Automation
-      # ------------------------------------------------------
-
       - ansible
 
 
@@ -162,7 +128,6 @@
 
     flatpak_apps:
 
-      - org.gnome.Ptyxis
       - app.zen_browser.zen
       - com.github.flxzt.rnote
       - com.github.tchx84.Flatseal
@@ -199,6 +164,10 @@
     # ========================================================
     # PODMAN
     # ========================================================
+    #
+    # Verify:
+    #   systemctl --user status podman.socket
+    #
 
     - name: Enable rootless Podman socket
       become: false
@@ -210,6 +179,7 @@
       environment:
         XDG_RUNTIME_DIR: "{{ workstation_runtime_dir }}"
         DBUS_SESSION_BUS_ADDRESS: "unix:path={{ workstation_runtime_dir }}/bus"
+      when: not ansible_check_mode
 
     - name: Configure Docker API compatibility
       become: false
@@ -243,4 +213,4 @@
         name: "{{ flatpak_apps }}"
         remote: flathub
         state: present
-        method: user
+        method: user    
