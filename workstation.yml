@@ -41,7 +41,7 @@
       # Desktop
       - ptyxis
       - gnome-tweaks
-      
+
       # Containers
       - podman
       - podman-docker
@@ -98,9 +98,6 @@
       # Automation
       - ansible-core
 
-    # Terraform repository
-    terraform_repo_url: "https://rpm.releases.hashicorp.com/fedora/hashicorp.repo"
-
     # Flatpak applications
     flatpak_apps:
 
@@ -125,16 +122,6 @@
         update_cache: true
 
     # ========================================================
-    # HASHICORP
-    # ========================================================
-
-    - name: Add HashiCorp repository
-      ansible.builtin.get_url:
-        url: "{{ terraform_repo_url }}"
-        dest: /etc/yum.repos.d/hashicorp.repo
-        mode: '0644'
-
-    # ========================================================
     # PACKAGES
     # ========================================================
 
@@ -142,16 +129,6 @@
       ansible.builtin.dnf:
         name: "{{ dnf_packages }}"
         state: present
-
-    # ========================================================
-    # TERRAFORM
-    # ========================================================
-
-    - name: Install Terraform
-      ansible.builtin.dnf:
-        name: terraform
-        state: present
-        update_cache: true
 
     # ========================================================
     # PODMAN
