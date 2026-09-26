@@ -85,9 +85,6 @@
       # Cloud
       - awscli2
 
-      # Testing / Load Testing
-      - k6
-
       # Kubernetes
       - kubernetes-client
       - helm
