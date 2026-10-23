@@ -102,12 +102,9 @@
     flatpak_apps:
 
       - app.zen_browser.zen
-      - com.github.flxzt.rnote
       - com.github.tchx84.Flatseal
       - com.mattjakeman.ExtensionManager
-      - com.spotify.Client
       - io.podman_desktop.PodmanDesktop
-      - org.mozilla.thunderbird_esr
       - org.onlyoffice.desktopeditors
       - org.videolan.VLC
 
